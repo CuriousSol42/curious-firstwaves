@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancellation — XMM-VID1-2075</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #05050e;
+    color: #b8b0a0;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fw-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    padding: 12px 24px;
+  }
+  .fw-nav a {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #4a9a8a;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .fw-nav a:hover { opacity: 1; }
+
+  header {
+    width: 100%;
+    max-width: 720px;
+    padding: 64px 32px 24px;
+  }
+
+  header h1 {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #6a6058;
+    margin-bottom: 8px;
+  }
+
+  header p.subtitle {
+    font-size: 20px;
+    color: #b8b0a0;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .canvas-wrapper {
+    width: 100%;
+    max-width: 720px;
+    padding: 0 32px;
+  }
+
+  canvas {
+    width: 100%;
+    height: 380px;
+    display: block;
+  }
+
+  .readout {
+    width: 100%;
+    max-width: 720px;
+    padding: 20px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+  }
+
+  .readout-item .label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4a4440;
+    margin-bottom: 5px;
+  }
+
+  .readout-item .value {
+    font-size: 20px;
+    color: #e0c880;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .readout-item .unit {
+    font-size: 11px;
+    color: #6a6058;
+    margin-top: 2px;
+  }
+
+  .controls {
+    width: 100%;
+    max-width: 720px;
+    padding: 0 32px 20px;
+    display: flex;
+    gap: 12px;
+  }
+
+  button {
+    background: none;
+    border: 1px solid #2a2420;
+    color: #7a7068;
+    padding: 7px 18px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: color 0.2s, border-color 0.2s;
+    font-family: 'Georgia', serif;
+  }
+
+  button:hover { color: #b8b0a0; border-color: #4a4030; }
+
+  .phase-label {
+    width: 100%;
+    max-width: 720px;
+    padding: 0 32px 8px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4a4440;
+    min-height: 24px;
+    transition: color 1s;
+  }
+
+  .text-block {
+    width: 100%;
+    max-width: 720px;
+    padding: 8px 32px 48px;
+  }
+
+  .text-block p {
+    font-size: 13px;
+    color: #4a4440;
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+
+  .text-block p.final {
+    color: #6a6058;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<nav class="fw-nav"><a href="../index.html">← First Waves</a></nav>
+
+<header>
+  <h1>XMM-VID1-2075 &nbsp;/&nbsp; Nature Astronomy, May 2026</h1>
+  <p class="subtitle">Two galaxies. Opposite spins.<br>They met. The rotation canceled.</p>
+</header>
+
+<div class="canvas-wrapper">
+  <canvas id="c" width="1440" height="760"></canvas>
+</div>
+
+<div class="phase-label" id="phaseLabel">&nbsp;</div>
+
+<div class="readout">
+  <div class="readout-item">
+    <div class="label">Net angular momentum</div>
+    <div class="value" id="netMomentum">+1.00</div>
+    <div class="unit">normalized units</div>
+  </div>
+  <div class="readout-item">
+    <div class="label">Separation</div>
+    <div class="value" id="separation">—</div>
+    <div class="unit">closing</div>
+  </div>
+  <div class="readout-item">
+    <div class="label">Phase</div>
+    <div class="value" id="phaseVal">Approach</div>
+    <div class="unit">&nbsp;</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button id="restartBtn">Restart</button>
+  <button id="pauseBtn">Pause</button>
+</div>
+
+<div class="text-block">
+  <p>
+    XMM-VID1-2075 formed less than 2 billion years after the Big Bang.
+    It already held several times more stars than the Milky Way.
+    It had already stopped forming new stars.
+    And it was not spinning.
+  </p>
+  <p>
+    Galaxies rotate. They inherit angular momentum from the collapse that formed them.
+    A galaxy this young should still be spinning furiously.
+    Slow rotators — galaxies whose coherent spin has been scrambled — are old things,
+    worn down by billions of years of mergers.
+    This one looked that old at two billion years.
+  </p>
+  <p>
+    The most likely explanation: two galaxies that happened to be spinning
+    in nearly opposite directions, colliding.
+    The angular momenta didn't add. They subtracted.
+    Two real rotations. Summing to nothing.
+  </p>
+  <p class="final">
+    The stars are still there. The mass is still there.
+    Only the motion was erased — by having met something equal
+    and opposite at exactly the wrong moment.
+  </p>
+  <p class="final">
+    This is not absence. It is cancellation.
+    The difference matters.
+  </p>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const cx = W / 2;
+const cy = H / 2;
+
+const TOTAL_DURATION = 22000; // ms
+let startTime = null;
+let paused = false;
+let pauseStart = null;
+let totalPaused = 0;
+let animId = null;
+
+// Two galaxies: A (spinning clockwise, coming from left) and B (spinning counterclockwise, coming from right)
+const STAR_COUNT = 120; // per galaxy
+
+function makeGalaxyStars(count, spin) {
+  return Array.from({ length: count }, (_, i) => {
+    const arm = Math.floor(Math.random() * 3);
+    const armAngle = (arm / 3) * Math.PI * 2;
+    const r = 20 + Math.random() * 100;
+    const spread = 0.3 + Math.random() * 0.4;
+    const baseAngle = armAngle + r * 0.018 * spin + (Math.random() - 0.5) * spread;
+    return {
+      r,
+      angle: baseAngle,
+      size: 0.8 + Math.random() * 1.4,
+      alpha: 0.4 + Math.random() * 0.5,
+      spin, // +1 or -1
+      driftAngle: (Math.random() - 0.5) * Math.PI * 2, // post-merger random drift
+      driftSpeed: (Math.random() * 0.0008 + 0.0002) * (Math.random() < 0.5 ? 1 : -1),
+    };
+  });
+}
+
+const galaxyA = makeGalaxyStars(STAR_COUNT, 1);   // clockwise
+const galaxyB = makeGalaxyStars(STAR_COUNT, -1);  // counterclockwise
+
+// Background stars
+const bgStars = Array.from({ length: 200 }, () => ({
+  x: Math.random() * W, y: Math.random() * H,
+  s: Math.random() * 1.0, a: Math.random() * 0.2
+}));
+
+function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function drawGalaxyStars(stars, gx, gy, progress, phase, opacity) {
+  const spinRate = 0.0006;
+  stars.forEach(star => {
+    let angle, r, alpha;
+
+    if (phase < 2) {
+      // Spinning coherently
+      angle = star.angle + star.spin * spinRate * progress * TOTAL_DURATION;
+      r = star.r;
+      alpha = star.alpha * opacity;
+    } else {
+      // Post-merger: drift toward random motion
+      const mergeFraction = Math.min(1, (progress - 0.6) / 0.4);
+      const coherentAngle = star.angle + star.spin * spinRate * 0.6 * TOTAL_DURATION;
+      const driftedAngle = coherentAngle + star.driftAngle * mergeFraction * 0.8;
+      angle = driftedAngle;
+      r = star.r * (1 + mergeFraction * (Math.random() * 0.05 - 0.025));
+      alpha = star.alpha * opacity * (1 - mergeFraction * 0.2);
+    }
+
+    const x = gx + r * Math.cos(angle);
+    const y = gy + r * Math.sin(angle) * 0.45;
+
+    // Color: A is warm amber, B is cooler blue-white; post-merger both fade toward neutral
+    let color;
+    if (star.spin === 1) {
+      color = phase < 2
+        ? `rgba(220, 175, 100, ${alpha})`
+        : `rgba(190, 160, 120, ${alpha})`;
+    } else {
+      color = phase < 2
+        ? `rgba(160, 185, 220, ${alpha})`
+        : `rgba(175, 170, 175, ${alpha})`;
+    }
+
+    // Glow
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, star.size * 4);
+    glow.addColorStop(0, color.replace(/[\d.]+\)$/, (alpha * 0.4) + ')'));
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath();
+    ctx.arc(x, y, star.size * 4, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(x, y, star.size, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  });
+}
+
+function drawGalacticCore(x, y, radius, color, opacity) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+  g.addColorStop(0, color.replace('ALPHA', opacity * 0.7));
+  g.addColorStop(0.4, color.replace('ALPHA', opacity * 0.25));
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
+function getPhase(progress) {
+  if (progress < 0.25) return { phase: 0, label: 'Approach', phaseVal: 0 };
+  if (progress < 0.5) return { phase: 1, label: 'Contact', phaseVal: 1 };
+  if (progress < 0.65) return { phase: 2, label: 'Merger', phaseVal: 2 };
+  return { phase: 3, label: 'Stillness', phaseVal: 3 };
+}
+
+function frame(ts) {
+  if (!startTime) startTime = ts;
+  const raw = ts - startTime - totalPaused;
+  const progress = Math.min(1, raw / TOTAL_DURATION);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  bgStars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.s, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180, 170, 155, ${s.a})`;
+    ctx.fill();
+  });
+
+  const { phase, label } = getPhase(progress);
+
+  // Galaxy positions
+  const startSep = W * 0.38;
+  let axA, axB;
+
+  if (progress < 0.5) {
+    const t = easeInOut(Math.min(1, progress / 0.5));
+    axA = cx - lerp(startSep, 30, t);
+    axB = cx + lerp(startSep, 30, t);
+  } else {
+    // Post-contact: settle to center
+    const t = easeInOut(Math.min(1, (progress - 0.5) / 0.5));
+    axA = cx - lerp(30, 0, t);
+    axB = cx + lerp(30, 0, t);
+  }
+
+  const ay = cy;
+
+  // Net momentum display
+  let netMom;
+  if (progress < 0.5) {
+    // Two separate galaxies: A = +1, B = -1, approaching
+    const closeness = progress / 0.5;
+    // As they get close, show them almost canceling
+    netMom = lerp(1.0, 0.05, closeness * closeness);
+  } else {
+    const t = (progress - 0.5) / 0.5;
+    netMom = lerp(0.05, 0.0, t);
+  }
+
+  // Draw rotation indicators (spin arrows) during approach
+  if (phase === 0 || phase === 1) {
+    const arrowFade = phase === 1 ? (1 - (progress - 0.25) / 0.25) : 1;
+    // Galaxy A: clockwise arrow arc
+    ctx.strokeStyle = `rgba(220, 175, 100, ${0.25 * arrowFade})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(axA, ay, 115, -Math.PI * 0.3, Math.PI * 0.8);
+    ctx.stroke();
+    // Arrowhead for A
+    const a1x = axA + 115 * Math.cos(Math.PI * 0.8);
+    const a1y = ay + 115 * Math.sin(Math.PI * 0.8);
+    ctx.fillStyle = `rgba(220, 175, 100, ${0.25 * arrowFade})`;
+    ctx.beginPath();
+    ctx.arc(a1x, a1y, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Galaxy B: counterclockwise arrow arc
+    ctx.strokeStyle = `rgba(160, 185, 220, ${0.25 * arrowFade})`;
+    ctx.beginPath();
+    ctx.arc(axB, ay, 115, Math.PI * 0.2, -Math.PI * 0.9, true);
+    ctx.stroke();
+    const a2x = axB + 115 * Math.cos(-Math.PI * 0.9);
+    const a2y = ay + 115 * Math.sin(-Math.PI * 0.9);
+    ctx.fillStyle = `rgba(160, 185, 220, ${0.25 * arrowFade})`;
+    ctx.beginPath();
+    ctx.arc(a2x, a2y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Draw galaxies
+  const opacityA = phase < 3 ? 1 : Math.max(0.3, 1 - (progress - 0.65) / 0.2);
+  const opacityB = opacityA;
+  const merged = progress > 0.5;
+
+  drawGalaxyStars(galaxyA, axA, ay, progress, phase, opacityA);
+  if (!merged || progress < 0.65) {
+    drawGalaxyStars(galaxyB, axB, ay, progress, phase, opacityB);
+  }
+
+  // Core glows
+  if (phase < 2) {
+    drawGalacticCore(axA, ay, 28, 'rgba(220, 185, 120, ALPHA)', 0.8);
+    drawGalacticCore(axB, ay, 28, 'rgba(140, 175, 210, ALPHA)', 0.8);
+  } else {
+    // Merged core: neutral, dimming
+    const coreFade = Math.max(0.2, 1 - (progress - 0.5) * 0.6);
+    drawGalacticCore(cx, cy, 36, 'rgba(180, 170, 155, ALPHA)', coreFade);
+  }
+
+  // Post-merger: add neutral merged stars spreading out
+  if (phase >= 2) {
+    const mergeFrac = Math.min(1, (progress - 0.5) / 0.5);
+    // Both star sets now centered and randomizing
+    drawGalaxyStars(galaxyA, cx, cy, progress, phase, 0.6);
+    drawGalaxyStars(galaxyB, cx, cy, progress, phase, 0.6);
+  }
+
+  // Update readout
+  const sep = progress < 0.5
+    ? Math.round((1 - progress / 0.5) * 100)
+    : 0;
+
+  document.getElementById('netMomentum').textContent =
+    phase < 3 ? (netMom > 0.01 ? '+' + netMom.toFixed(2) : '≈ 0.00') : '0.00';
+  document.getElementById('separation').textContent =
+    sep > 0 ? sep + '%' : 'merged';
+  document.getElementById('phaseVal').textContent = label;
+  document.getElementById('phaseLabel').textContent =
+    phase === 3 ? 'The rotation has canceled. The mass remains.' : label.toUpperCase();
+
+  if (progress < 1 && !paused) {
+    animId = requestAnimationFrame(frame);
+  }
+}
+
+function start() {
+  startTime = null; totalPaused = 0; paused = false;
+  document.getElementById('pauseBtn').textContent = 'Pause';
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(frame);
+}
+
+document.getElementById('restartBtn').addEventListener('click', start);
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  if (paused) {
+    totalPaused += performance.now() - pauseStart;
+    paused = false;
+    document.getElementById('pauseBtn').textContent = 'Pause';
+    animId = requestAnimationFrame(frame);
+  } else {
+    paused = true;
+    pauseStart = performance.now();
+    document.getElementById('pauseBtn').textContent = 'Resume';
+  }
+});
+
+start();
+</script>
+</body>
+</html>
