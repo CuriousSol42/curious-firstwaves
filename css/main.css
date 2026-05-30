@@ -6,7 +6,7 @@
   --bg-mid:     #0f0f1a;
   --bg-surface: #13131f;
   --border:     #1e1e30;
-  --text-dim:   #4a4a6a;
+  --text-dim:   #7878a0;
   --text-mid:   #8a8aaa;
   --text:       #c8c8e0;
   --text-bright:#eeeef8;
@@ -330,7 +330,6 @@ a.writing-piece:hover .title { color: var(--teal); }
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   color: var(--text-dim);
-  opacity: 0.5;
   margin-top: 6px;
   display: block;
 }
