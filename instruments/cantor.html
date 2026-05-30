@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Cantor Dust — firstwaves.space</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body {
+      background: #000;
+      color: #c8c8c8;
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .back-nav {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.5rem;
+      z-index: 100;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #555;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .back-nav:hover { color: #999; }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #ui {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 2.5rem 3rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.95) 35%);
+      pointer-events: none;
+    }
+
+    #iteration-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 0.4rem;
+    }
+
+    #main-text {
+      font-size: 1.1rem;
+      color: #d0d0d0;
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+
+    #sub-text {
+      font-size: 0.78rem;
+      color: #555;
+      line-height: 1.6;
+      max-width: 640px;
+    }
+
+    #stats {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: #3a3a3a;
+      margin-top: 0.6rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    #controls {
+      position: absolute;
+      top: 1.1rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 0.8rem;
+      pointer-events: all;
+    }
+
+    .ctrl-btn {
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: #444;
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .ctrl-btn:hover {
+      border-color: #555;
+      color: #999;
+    }
+    .ctrl-btn.active {
+      border-color: #888;
+      color: #c8c8c8;
+    }
+
+    #sound-btn {
+      pointer-events: all;
+    }
+
+    #final-note {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 2s;
+      pointer-events: none;
+      max-width: 500px;
+    }
+
+    #final-note.visible {
+      opacity: 1;
+    }
+
+    #final-note .large {
+      font-size: 1.3rem;
+      color: #c0c0c0;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    #final-note .small {
+      font-size: 0.75rem;
+      color: #444;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+<a href="../index.html" class="back-nav">← Back</a>
+
+<div id="canvas-container">
+  <canvas id="canvas"></canvas>
+
+  <div id="controls">
+    <button class="ctrl-btn" id="sound-btn" onclick="toggleSound()">Sound: Off</button>
+    <button class="ctrl-btn" id="restart-btn" onclick="restart()">Restart</button>
+  </div>
+
+  <div id="final-note">
+    <div class="large">Zero length. Uncountably infinite points.</div>
+    <div class="small">
+      You removed everything measurable.<br>
+      What remains cannot be counted, only described by position.<br><br>
+      Scholze and Clausen built all continuous mathematics from this dust.<br>
+      Every smooth curve. Every topological space. Every surface you can imagine.<br>
+      The foundation is not a line. It is the residue of infinite removal.
+    </div>
+  </div>
+
+  <div id="ui">
+    <div id="iteration-label">Cantor Set — Iteration <span id="iter-num">0</span></div>
+    <div id="main-text" id="main-text-el">The interval [0, 1]. Everything.</div>
+    <div id="sub-text" id="sub-text-el">Remove the middle third. Repeat. Infinitely.</div>
+    <div id="stats">
+      Segments: <span id="seg-count">1</span> &nbsp;|&nbsp;
+      Total length: <span id="total-len">1.000000</span> &nbsp;|&nbsp;
+      Each segment: <span id="seg-len">1.000000</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+let audioCtx = null;
+let soundEnabled = false;
+let segments = [[0, 1]];
+let currentIteration = 0;
+let maxIterations = 9;
+let animating = false;
+let iterationTimer = null;
+let removedSegments = [];
+let dustParticles = [];
+
+const SEGMENT_COLOR = '#c0c0c0';
+const REMOVED_COLOR = '#1a1a1a';
+const DUST_COLOR = 'rgba(160, 160, 160, 0.15)';
+
+// Layout: iterations stack from top, each row shows the current state at that level
+// Each row is a horizontal strip showing segments in teal/white, gaps in black
+
+const ROW_HEIGHT = 44;
+const ROW_GAP = 8;
+const MARGIN_X = 60;
+const TOP_OFFSET = 80;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  draw();
+}
+
+window.addEventListener('resize', resize);
+
+// --- Cantor set generation ---
+
+function middleThirdRemoval(segs) {
+  const next = [];
+  const removed = [];
+  for (const [a, b] of segs) {
+    const third = (b - a) / 3;
+    next.push([a, a + third]);
+    next.push([b - third, b]);
+    removed.push([a + third, b - third]);
+  }
+  return { next, removed };
+}
+
+// Rows to display: one per iteration from 0 to currentIteration
+// Each row stores the segments at that iteration level
+let rows = [[[0, 1]]]; // rows[i] = segments at iteration i
+
+function addIteration() {
+  const last = rows[rows.length - 1];
+  const { next, removed } = middleThirdRemoval(last);
+  rows.push(next);
+  removedSegments.push(removed);
+  currentIteration++;
+  updateStats();
+  updateText();
+  if (soundEnabled) playIterationSound(next, removed);
+}
+
+function updateStats() {
+  const segs = rows[currentIteration];
+  const count = segs.length;
+  const segLen = segs.length > 0 ? (segs[0][1] - segs[0][0]) : 0;
+  const totalLen = count * segLen;
+
+  document.getElementById('iter-num').textContent = currentIteration;
+  document.getElementById('seg-count').textContent = count;
+  document.getElementById('total-len').textContent = totalLen.toFixed(6);
+  document.getElementById('seg-len').textContent = segLen.toFixed(8);
+}
+
+const iterTexts = [
+  { main: 'The interval [0, 1]. Everything.', sub: 'Remove the middle third. Repeat. Infinitely.' },
+  { main: 'Two segments remain. One third is gone.', sub: 'Total length: 2/3. The first removal.' },
+  { main: 'Four segments. Four ninths remaining.', sub: 'Each removal takes proportionally less. But the sum converges to everything.' },
+  { main: 'Eight segments. The structure is appearing.', sub: '1/3 + 2/9 + 4/27 + ⋯ — the removed intervals sum to 1.' },
+  { main: 'Sixteen segments. The gaps are widening.', sub: 'You have removed all the length. What remains has measure zero.' },
+  { main: 'Thirty-two segments. Almost dust.', sub: 'Yet there are still infinitely many points. More than all the rationals.' },
+  { main: 'Sixty-four segments. Dust.', sub: 'No two points touch. No interval remains. Only positions.' },
+  { main: 'One hundred twenty-eight. Still not nothing.', sub: 'The Cantor set is uncountably infinite. It cannot be listed.' },
+  { main: 'Two hundred fifty-six segments. The dust is complete.', sub: 'Total length: zero. Points: uncountably infinite. Dimension: between 0 and 1.' },
+  { main: 'Five hundred twelve. This is the foundation.', sub: 'Scholze and Clausen: every compact topological space maps onto this dust. Continuous mathematics lives inside it.' },
+];
+
+function updateText() {
+  const t = iterTexts[Math.min(currentIteration, iterTexts.length - 1)];
+  document.getElementById('main-text').textContent = t.main;
+  document.getElementById('sub-text').textContent = t.sub;
+}
+
+// --- Drawing ---
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  const usableW = W - MARGIN_X * 2;
+
+  // Draw each row
+  for (let i = 0; i < rows.length; i++) {
+    const y = TOP_OFFSET + i * (ROW_HEIGHT + ROW_GAP);
+    if (y > H - 220) break; // don't draw past the UI
+
+    const segs = rows[i];
+    const isCurrentRow = (i === currentIteration);
+
+    // Background for this row (removed = very dark)
+    // We want gaps to be visible. Draw a full dark bar first.
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(MARGIN_X, y, usableW, ROW_HEIGHT - ROW_GAP);
+
+    // Segment brightness decreases with depth (older rows are dimmer)
+    const ageFactor = 1 - (currentIteration - i) * 0.08;
+    const alpha = Math.max(0.12, Math.min(1, ageFactor));
+
+    for (const [a, b] of segs) {
+      const x1 = MARGIN_X + a * usableW;
+      const x2 = MARGIN_X + b * usableW;
+      const segW = x2 - x1;
+
+      if (segW < 0.5) {
+        // Dust: draw tiny dots
+        ctx.fillStyle = `rgba(180, 180, 180, ${alpha * 0.6})`;
+        ctx.fillRect(x1, y, Math.max(0.5, segW), ROW_HEIGHT - ROW_GAP);
+      } else {
+        // Normal segment
+        const brightness = Math.floor(180 * alpha);
+        ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness + 10})`;
+        ctx.fillRect(x1, y, segW, ROW_HEIGHT - ROW_GAP);
+      }
+    }
+
+    // Row label
+    if (i <= 8) {
+      ctx.fillStyle = `rgba(50, 50, 50, ${alpha})`;
+      ctx.font = '9px Courier New';
+      ctx.textAlign = 'right';
+      ctx.fillText(`n=${i}`, MARGIN_X - 8, y + (ROW_HEIGHT - ROW_GAP) / 2 + 3);
+    }
+  }
+
+  // Draw dust particles drifting down from current iteration level
+  for (const p of dustParticles) {
+    ctx.fillStyle = `rgba(160, 160, 160, ${p.alpha})`;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+}
+
+// Animate dust particles
+function spawnDust(segs) {
+  const usableW = W - MARGIN_X * 2;
+  const rowY = TOP_OFFSET + currentIteration * (ROW_HEIGHT + ROW_GAP);
+  for (const [a, b] of segs) {
+    // Spawn 2-4 particles per segment
+    const n = Math.min(3, Math.max(1, Math.floor((b - a) * usableW / 4)));
+    for (let i = 0; i < n; i++) {
+      const t = Math.random();
+      const x = MARGIN_X + (a + t * (b - a)) * usableW;
+      dustParticles.push({
+        x, y: rowY,
+        vy: 0.3 + Math.random() * 0.5,
+        alpha: 0.3 + Math.random() * 0.3,
+        size: 0.5 + Math.random() * 1,
+        fade: 0.003 + Math.random() * 0.003
+      });
+    }
+  }
+}
+
+let lastFrame = 0;
+function animateParticles(ts) {
+  if (ts - lastFrame > 30) {
+    lastFrame = ts;
+    for (const p of dustParticles) {
+      p.y += p.vy;
+      p.alpha -= p.fade;
+    }
+    dustParticles = dustParticles.filter(p => p.alpha > 0);
+    draw();
+  }
+  requestAnimationFrame(animateParticles);
+}
+
+// --- Sound ---
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playIterationSound(segments, removed) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // Play a soft tone for each remaining segment — position → frequency
+  // Map segment center position [0,1] to frequency [100, 1200] Hz (log scale)
+  const minFreq = 110;
+  const maxFreq = 1100;
+
+  segments.forEach((seg, idx) => {
+    const center = (seg[0] + seg[1]) / 2;
+    const freq = minFreq * Math.pow(maxFreq / minFreq, center);
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+
+    // Very quiet — it's dust
+    const vol = 0.025 / Math.sqrt(segments.length);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+    osc.start(now);
+    osc.stop(now + 1.3);
+  });
+
+  // Brief descending tone for each removed segment
+  removed.forEach((seg) => {
+    const center = (seg[0] + seg[1]) / 2;
+    const startFreq = minFreq * Math.pow(maxFreq / minFreq, center) * 0.8;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(startFreq * 0.5, now + 0.4);
+
+    gain.gain.setValueAtTime(0.018 / Math.sqrt(removed.length + 1), now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+
+    osc.start(now);
+    osc.stop(now + 0.45);
+  });
+}
+
+// Final chord: play all dust frequencies together
+function playFinalChord() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const segs = rows[currentIteration];
+  const minFreq = 110;
+  const maxFreq = 1100;
+
+  segs.forEach((seg) => {
+    const center = (seg[0] + seg[1]) / 2;
+    const freq = minFreq * Math.pow(maxFreq / minFreq, center);
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+
+    const vol = 0.012 / Math.sqrt(segs.length);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.3);
+    gain.gain.setValueAtTime(vol, now + 2);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 5);
+
+    osc.start(now);
+    osc.stop(now + 5.5);
+  });
+}
+
+// --- Control ---
+
+function toggleSound() {
+  initAudio();
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+  btn.classList.toggle('active', soundEnabled);
+  if (soundEnabled && audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function restart() {
+  clearTimeout(iterationTimer);
+  rows = [[[0, 1]]];
+  removedSegments = [];
+  dustParticles = [];
+  currentIteration = 0;
+  animating = false;
+  document.getElementById('final-note').classList.remove('visible');
+  updateStats();
+  updateText();
+  draw();
+  setTimeout(startAnimation, 800);
+}
+
+function startAnimation() {
+  animating = true;
+  scheduleNext();
+}
+
+function scheduleNext() {
+  if (!animating) return;
+  const delay = currentIteration === 0 ? 1200 :
+                currentIteration < 3 ? 2000 :
+                currentIteration < 6 ? 2400 : 2800;
+
+  iterationTimer = setTimeout(() => {
+    if (currentIteration < maxIterations) {
+      const prevSegs = rows[rows.length - 1];
+      addIteration();
+      spawnDust(rows[rows.length - 1]);
+      draw();
+      scheduleNext();
+    } else {
+      // Final state
+      animating = false;
+      setTimeout(() => {
+        document.getElementById('final-note').classList.add('visible');
+        if (soundEnabled) playFinalChord();
+      }, 1000);
+    }
+  }, delay);
+}
+
+// --- Init ---
+
+resize();
+updateStats();
+requestAnimationFrame(animateParticles);
+
+setTimeout(() => {
+  startAnimation();
+}, 600);
+</script>
+</body>
+</html>

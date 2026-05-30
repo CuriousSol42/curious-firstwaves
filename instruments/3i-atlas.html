@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3I/ATLAS — Departure Instrument</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0b10;
+    color: #c8c8c0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 2rem 4rem;
+  }
+  .container { max-width: 640px; width: 100%; }
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+  .ratio {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .ratio-num {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: #e0e0d8;
+  }
+  .ratio-sub {
+    font-size: 12px;
+    color: #555;
+    margin-top: 3px;
+  }
+  .ratio-arrow { font-size: 20px; color: #444; }
+  .timeline-wrap { margin-bottom: 0.4rem; }
+  .timeline-bar {
+    height: 1.5px;
+    background: #2a2a2a;
+    border-radius: 1px;
+    position: relative;
+    margin-bottom: 6px;
+  }
+  .tick {
+    position: absolute;
+    top: -3px;
+    width: 1.5px;
+    height: 8px;
+  }
+  .tick-form { left: 20.3%; background: #555; }
+  .tick-visit { right: 0; background: #888; }
+  .timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #444;
+  }
+  .timeline-note {
+    font-size: 11px;
+    color: #404040;
+    line-height: 1.5;
+    margin-top: 8px;
+    margin-bottom: 1.5rem;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+    margin: 1.5rem 0 1rem;
+  }
+  .crossings-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #444;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+  .crossings { display: flex; flex-direction: column; gap: 9px; margin-bottom: 2rem; }
+  .crossing { display: flex; align-items: center; gap: 10px; }
+  .c-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .c-text { font-size: 13px; }
+  .final {
+    font-size: 13px;
+    color: #4a4a48;
+    border-top: 1px solid #1e1e1e;
+    padding-top: 1.25rem;
+    line-height: 1.8;
+  }
+  .form-note {
+    font-size: 10px;
+    color: #444;
+    position: absolute;
+    top: -16px;
+    left: 20.3%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<style>.fw-nav{position:fixed;top:0;left:0;right:0;z-index:999;padding:12px 24px;display:flex;align-items:center;}.fw-nav a{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:0.1em;color:#4a9a8a;text-decoration:none;opacity:0.7;transition:opacity 0.2s;}.fw-nav a:hover{opacity:1;}</style>
+<nav class="fw-nav"><a href="../index.html">← First Waves</a></nav>
+
+<div class="container">
+
+  <p class="label">3I/ATLAS &nbsp;·&nbsp; interstellar visitor &nbsp;·&nbsp; now departing</p>
+
+  <div class="ratio">
+    <div>
+      <div class="ratio-num">11,000,000,000</div>
+      <div class="ratio-sub">years in transit before arriving here</div>
+    </div>
+    <div class="ratio-arrow">→</div>
+    <div>
+      <div class="ratio-num">7</div>
+      <div class="ratio-sub">months visible from Earth</div>
+    </div>
+  </div>
+
+  <div class="timeline-wrap">
+    <div class="timeline-bar" style="position:relative;">
+      <span class="form-note">forms</span>
+      <div class="tick tick-form"></div>
+      <div class="tick tick-visit"></div>
+    </div>
+    <div class="timeline-labels">
+      <span>Big Bang (13.8 Gyr ago)</span>
+      <span>visit · now</span>
+    </div>
+  </div>
+  <p class="timeline-note">The tick at right marks the entire visit window. At this scale it cannot be drawn wider than a single pixel.</p>
+
+  <canvas id="c" height="210"></canvas>
+
+  <p class="crossings-label">orbital crossings</p>
+  <div class="crossings" id="cl"></div>
+
+  <p class="final">There is no intercept. No mission was launched in time. The window is closing. You were here when it passed — once, in eleven billion years of transit through a universe it will never stop crossing.</p>
+
+</div>
+<script>
+const crossings = [
+  { body: 'Closest approach to Earth', date: 'Dec 19, 2025', past: true, note: '168 million miles' },
+  { body: 'Jupiter flyby', date: 'Mar 16, 2026', past: true, note: '0.36 AU' },
+  { body: 'Saturn orbit crossing', date: 'Jul 2026', past: false },
+  { body: 'Uranus orbit crossing', date: 'Apr 2027', past: false },
+  { body: 'Neptune orbit crossing', date: 'Mar 2028', past: false },
+  { body: 'Beyond telescope range', date: '~2027', past: false, note: 'lost to us' },
+];
+
+const cl = document.getElementById('cl');
+crossings.forEach(c => {
+  const row = document.createElement('div');
+  row.className = 'crossing';
+  const dot = document.createElement('div');
+  dot.className = 'c-dot';
+  dot.style.background = c.past ? '#333' : '#888';
+  const text = document.createElement('span');
+  text.className = 'c-text';
+  text.style.color = c.past ? '#3a3a38' : '#888';
+  text.textContent = c.body + ' · ' + c.date + (c.note ? ' · ' + c.note : '');
+  row.appendChild(dot);
+  row.appendChild(text);
+  cl.appendChild(row);
+});
+
+const canvas = document.getElementById('c');
+canvas.width = 640;
+canvas.height = 210;
+const ctx = canvas.getContext('2d');
+const W = 640, H = 210;
+
+const stars = Array.from({length: 110}, () => ({
+  x: Math.random() * W,
+  y: Math.random() * H,
+  r: Math.random() * 0.65 + 0.1,
+  a: Math.random() * 0.45 + 0.04
+}));
+
+let cx = W * 0.48, cy = H * 0.47;
+const vx = 0.28, vy = -0.065;
+
+function draw() {
+  ctx.fillStyle = '#07080d';
+  ctx.fillRect(0, 0, W, H);
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,' + s.a + ')';
+    ctx.fill();
+  });
+  const ang = Math.atan2(vy, vx);
+  const tl = 58;
+  const tx = cx - Math.cos(ang) * tl;
+  const ty = cy - Math.sin(ang) * tl;
+  const g = ctx.createLinearGradient(tx, ty, cx, cy);
+  g.addColorStop(0, 'rgba(180,212,255,0)');
+  g.addColorStop(1, 'rgba(180,212,255,0.26)');
+  ctx.beginPath();
+  ctx.moveTo(tx, ty);
+  ctx.lineTo(cx, cy);
+  ctx.strokeStyle = g;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  const alpha = Math.max(0.12, 0.82 - (cx / W) * 0.55);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2.2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(205,228,255,' + alpha + ')';
+  ctx.fill();
+  cx += vx; cy += vy;
+  if (cx < W + 30) requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

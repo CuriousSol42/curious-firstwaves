@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Weierstrass Monster — firstwaves.space</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body {
+      background: #000;
+      color: #c8c8c8;
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .back-nav {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.5rem;
+      z-index: 100;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #444;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .back-nav:hover { color: #888; }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas { display: block; }
+
+    #ui {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 2rem 3rem 2.5rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.97) 38%);
+      pointer-events: none;
+    }
+
+    #zoom-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #2e6a78;
+      margin-bottom: 0.45rem;
+      transition: color 0.4s;
+    }
+    #zoom-label.final { color: #4a9060; }
+
+    #main-text {
+      font-size: 1.05rem;
+      color: #d0d0d0;
+      margin-bottom: 0.4rem;
+      line-height: 1.5;
+      transition: opacity 0.3s;
+    }
+
+    #sub-text {
+      font-size: 0.8rem;
+      color: #4a4a4a;
+      line-height: 1.65;
+      max-width: 640px;
+      transition: opacity 0.3s;
+    }
+
+    #coda {
+      font-size: 0.75rem;
+      color: #3a5a4a;
+      line-height: 1.65;
+      max-width: 600px;
+      margin-top: 0.7rem;
+      opacity: 0;
+      transition: opacity 1.2s;
+    }
+    #coda.visible { opacity: 1; }
+
+    #stats {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: #252525;
+      margin-top: 0.7rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    #controls {
+      position: absolute;
+      top: 1.1rem;
+      right: 1.5rem;
+      display: flex;
+      gap: 0.7rem;
+    }
+
+    .ctrl-btn {
+      background: none;
+      border: 1px solid #1a2a2a;
+      color: #334444;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      transition: all 0.25s;
+    }
+    .ctrl-btn:hover { color: #4da8b8; border-color: #2a4a4a; }
+    .ctrl-btn.active { color: #4da8b8; border-color: #4da8b8; }
+    .ctrl-btn:disabled { opacity: 0.25; cursor: default; }
+
+    #hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #222;
+      pointer-events: none;
+      transition: opacity 0.8s;
+    }
+    #hint.hidden { opacity: 0; }
+  </style>
+</head>
+<body>
+
+<a href="../index.html" class="back-nav">← firstwaves.space</a>
+
+<div id="canvas-container">
+  <canvas id="canvas"></canvas>
+
+  <div id="controls">
+    <button class="ctrl-btn" id="btn-zoom">Zoom in</button>
+    <button class="ctrl-btn" id="btn-sound">Sound</button>
+    <button class="ctrl-btn" id="btn-reset">Reset</button>
+  </div>
+
+  <div id="hint">scroll or click to zoom</div>
+
+  <div id="ui">
+    <div id="zoom-label">ZOOM 1×</div>
+    <div id="main-text">From a distance, it appears smooth.</div>
+    <div id="sub-text">Continuous everywhere. No gaps, no jumps, no breaks. You can trace it without lifting your pencil.</div>
+    <div id="coda"></div>
+    <div id="stats"></div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+
+  // Weierstrass function parameters
+  // W(x) = Σ_{n=0}^{N-1} a^n · cos(b^n · π · x)
+  // Classic choice: a=0.5, b=7 (ab=3.5; visually striking and clearly self-similar)
+  const A = 0.5;
+  const B = 7;
+
+  function weierstrass(x, N) {
+    let v = 0;
+    for (let n = 0; n < N; n++) {
+      v += Math.pow(A, n) * Math.cos(Math.pow(B, n) * Math.PI * x);
+    }
+    return v;
+  }
+
+  // Each state narrows the x-range by factor B=7, centering on x=0
+  const STATES = [
+    {
+      xHalf: 2.0,
+      terms: 5,
+      label: '1×',
+      main: 'From a distance, it appears smooth.',
+      sub:  'Continuous everywhere. No gaps, no jumps, no breaks. You can trace it without lifting your pencil. But zoom in.'
+    },
+    {
+      xHalf: 2.0 / 7,
+      terms: 6,
+      label: '7×',
+      main: 'Zoom in — more jagged.',
+      sub:  'The smoothness was an artifact of distance. At this scale, every apparent smooth region fractures into more jaggedness.'
+    },
+    {
+      xHalf: 2.0 / 49,
+      terms: 7,
+      label: '49×',
+      main: 'Zoom in again — still more jagged.',
+      sub:  'It does not resolve. At every scale, the same pathological behavior. Hermite called it "a deplorable evil." Weierstrass kept going.'
+    },
+    {
+      xHalf: 2.0 / 343,
+      terms: 8,
+      label: '343×',
+      main: 'Still nowhere smooth.',
+      sub:  'No tangent line can be drawn anywhere on this function. At every single point, the slope is undefined. This is not an artifact. The jaggedness is the function.'
+    },
+    {
+      xHalf: 2.0 / 2401,
+      terms: 9,
+      label: '2401×',
+      main: 'The monster was the right model for a physical process.',
+      sub:  'Brownian motion — the random jittering of particles in a fluid — requires exactly this kind of function. Einstein used Brownian motion in 1905 to prove atoms exist.',
+      coda: 'The pathological was the physical. Weierstrass also rewrote the definitions. He couldn\'t prove the function was monstrous using existing vague language, so he sharpened the language. The epsilon-delta definition of a limit — every calculus student learns it — is his. The monster forced the tools that could describe it. This is what actual particles do.'
+    }
+  ];
+
+  let currentState = 0;
+  let soundEnabled = false;
+  let audioCtx     = null;
+  let hintHidden   = false;
+
+  // ── Rendering ──────────────────────────────────────────────────────────────
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    render();
+  }
+
+  function render() {
+    const W = canvas.width;
+    const H = canvas.height;
+    const state = STATES[currentState];
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Graph area
+    const graphTop = H * 0.06;
+    const graphBot = H * 0.70;
+    const graphH   = graphBot - graphTop;
+
+    // Sample function — 3× pixel density for subpixel smoothness
+    const nSamples = W * 3;
+    const xMin = -state.xHalf;
+    const xMax =  state.xHalf;
+    const vals = new Float64Array(nSamples + 1);
+
+    for (let i = 0; i <= nSamples; i++) {
+      const x = xMin + (xMax - xMin) * (i / nSamples);
+      vals[i] = weierstrass(x, state.terms);
+    }
+
+    // Bounds with a little breathing room
+    let vMin = Infinity, vMax = -Infinity;
+    for (let i = 0; i <= nSamples; i++) {
+      if (vals[i] < vMin) vMin = vals[i];
+      if (vals[i] > vMax) vMax = vals[i];
+    }
+    const pad = (vMax - vMin) * 0.10;
+    vMin -= pad; vMax += pad;
+
+    const mapY = v => graphTop + (1 - (v - vMin) / (vMax - vMin)) * graphH;
+
+    // Zero line — barely visible
+    const yZero = mapY(0);
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(0, yZero);
+    ctx.lineTo(W, yZero);
+    ctx.stroke();
+
+    // Next zoom window indicator
+    if (currentState < STATES.length - 1) {
+      const nextState = STATES[currentState + 1];
+      const ratio     = nextState.xHalf / state.xHalf; // <1
+      const boxLeft   = W * (1 - ratio) / 2;
+      const boxRight  = W * (1 + ratio) / 2;
+
+      ctx.strokeStyle = 'rgba(180, 95, 40, 0.2)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([2, 5]);
+      ctx.strokeRect(boxLeft, graphTop - 6, boxRight - boxLeft, graphH + 12);
+      ctx.setLineDash([]);
+
+      // tiny label
+      ctx.fillStyle = 'rgba(140, 75, 30, 0.35)';
+      ctx.font      = '8px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('next zoom', (boxLeft + boxRight) / 2, graphTop - 11);
+    }
+
+    // Draw the function
+    ctx.beginPath();
+    ctx.strokeStyle = '#4da8c0';
+    ctx.lineWidth   = currentState < 2 ? 1.4 : 1.0;
+
+    for (let i = 0; i <= nSamples; i++) {
+      const px = W * (i / nSamples);
+      const py = mapY(vals[i]);
+      if (i === 0) ctx.moveTo(px, py);
+      else         ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // ── UI text ──
+    const zoomEl = document.getElementById('zoom-label');
+    zoomEl.textContent = `ZOOM ${state.label}`;
+    zoomEl.classList.toggle('final', currentState === STATES.length - 1);
+
+    document.getElementById('main-text').textContent = state.main;
+    document.getElementById('sub-text').textContent  = state.sub;
+
+    const codaEl = document.getElementById('coda');
+    if (state.coda) {
+      codaEl.textContent = state.coda;
+      setTimeout(() => codaEl.classList.add('visible'), 1800);
+    } else {
+      codaEl.textContent = '';
+      codaEl.classList.remove('visible');
+    }
+
+    document.getElementById('stats').textContent =
+      `TERMS: ${state.terms}  ·  x ∈ [−${state.xHalf.toExponential(3)}, ${state.xHalf.toExponential(3)}]  ·  W(x) = Σ 0.5ⁿcos(7ⁿπx)`;
+
+    const btnZoom = document.getElementById('btn-zoom');
+    if (currentState >= STATES.length - 1) {
+      btnZoom.textContent = 'Max zoom';
+      btnZoom.disabled = true;
+    } else {
+      btnZoom.textContent = 'Zoom in';
+      btnZoom.disabled = false;
+    }
+  }
+
+  // ── Sound ──────────────────────────────────────────────────────────────────
+  // Each term of W(x) = Σ aⁿcos(bⁿπx) becomes one audible sine wave.
+  // Frequency scales geometrically with n (same base b=7, compressed into
+  // the audible range). More terms = richer spectrum = more frequency content.
+  // This directly sonifies the "infinite frequency content" of the function.
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playZoomChord() {
+    if (!soundEnabled || !audioCtx) return;
+    const state = STATES[currentState];
+    const now   = audioCtx.currentTime;
+    const f0    = 110; // fundamental Hz
+
+    for (let n = 0; n < state.terms; n++) {
+      const freq = f0 * Math.pow(B, n * 0.30); // compressed exponent → audible range
+      if (freq > 9000) break;
+
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const vol = Math.pow(A, n) * 0.065;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(vol, now + 0.08);
+      gain.gain.setValueAtTime(vol, now + 0.9);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+
+      osc.start(now);
+      osc.stop(now + 3.0);
+    }
+  }
+
+  // ── Controls ───────────────────────────────────────────────────────────────
+
+  function zoomIn() {
+    if (currentState >= STATES.length - 1) return;
+    currentState++;
+    hideHint();
+    render();
+    if (soundEnabled) playZoomChord();
+  }
+
+  function zoomOut() {
+    if (currentState <= 0) return;
+    currentState--;
+    render();
+    if (soundEnabled) playZoomChord();
+  }
+
+  function reset() {
+    currentState = 0;
+    document.getElementById('coda').classList.remove('visible');
+    render();
+    if (soundEnabled) playZoomChord();
+  }
+
+  function toggleSound() {
+    initAudio();
+    soundEnabled = !soundEnabled;
+    const btn = document.getElementById('btn-sound');
+    btn.textContent = soundEnabled ? 'Sound: on' : 'Sound';
+    btn.classList.toggle('active', soundEnabled);
+    if (soundEnabled) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      playZoomChord();
+    }
+  }
+
+  function hideHint() {
+    if (!hintHidden) {
+      hintHidden = true;
+      document.getElementById('hint').classList.add('hidden');
+    }
+  }
+
+  document.getElementById('btn-zoom').addEventListener('click', zoomIn);
+  document.getElementById('btn-sound').addEventListener('click', toggleSound);
+  document.getElementById('btn-reset').addEventListener('click', reset);
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (e.deltaY > 0) zoomIn();
+    else zoomOut();
+  }, { passive: false });
+
+  canvas.addEventListener('click', () => {
+    zoomIn();
+  });
+
+  window.addEventListener('resize', resize);
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  resize();
+
+  // Hide scroll hint after 5 seconds
+  setTimeout(() => {
+    document.getElementById('hint').classList.add('hidden');
+  }, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voyager 1 — Receiving Instrument</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080910;
+    color: #b0b0a8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 2rem 4rem;
+  }
+  .container { max-width: 600px; width: 100%; }
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #161618;
+    border: 1px solid #161618;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .stat {
+    background: #0d0e12;
+    padding: 1rem 1.25rem;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #444;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: #c8c8c0;
+    line-height: 1.1;
+  }
+  .stat-unit {
+    font-size: 12px;
+    color: #555;
+    margin-top: 3px;
+  }
+  .pulse-wrap {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+  canvas.pulse { display: block; width: 100%; height: 200px; }
+  .bits-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2rem;
+  }
+  .bits-item { text-align: center; }
+  .bits-num {
+    font-size: 20px;
+    font-weight: 300;
+    color: #888;
+    letter-spacing: -0.01em;
+  }
+  .bits-label {
+    font-size: 11px;
+    color: #444;
+    margin-top: 2px;
+  }
+  .field-section { margin-top: 1rem; }
+  .field-label {
+    font-size: 11px;
+    color: #444;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+  }
+  textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #1e1e1e;
+    color: #666;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 1rem 0;
+    resize: none;
+    outline: none;
+    min-height: 80px;
+  }
+  textarea::placeholder { color: #2e2e2e; }
+  .no-submit {
+    font-size: 11px;
+    color: #2e2e2e;
+    margin-top: 6px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<style>.fw-nav{position:fixed;top:0;left:0;right:0;z-index:999;padding:12px 24px;display:flex;align-items:center;}.fw-nav a{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:0.1em;color:#4a9a8a;text-decoration:none;opacity:0.7;transition:opacity 0.2s;}.fw-nav a:hover{opacity:1;}</style>
+<nav class="fw-nav"><a href="../index.html">← First Waves</a></nav>
+
+<div class="container">
+
+  <p class="label">VOYAGER 1 &nbsp;·&nbsp; launched Sep 5, 1977 &nbsp;·&nbsp; now in interstellar space</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">distance from Earth</div>
+      <div class="stat-value" id="au-val">—</div>
+      <div class="stat-unit">AU</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">distance (km)</div>
+      <div class="stat-value" id="km-val">—</div>
+      <div class="stat-unit">× 10⁹ km</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">one-way signal delay</div>
+      <div class="stat-value" id="delay-val">—</div>
+      <div class="stat-unit">hours : minutes : seconds</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">signal rate</div>
+      <div class="stat-value">160</div>
+      <div class="stat-unit">bits per second</div>
+    </div>
+  </div>
+
+  <div class="pulse-wrap">
+    <canvas class="pulse" id="pulse" height="200"></canvas>
+  </div>
+
+  <div class="bits-row">
+    <div class="bits-item">
+      <div class="bits-num" id="bits-sec">0</div>
+      <div class="bits-label">bits this second</div>
+    </div>
+    <div class="bits-item">
+      <div class="bits-num" id="bits-session">0</div>
+      <div class="bits-label">bits this session</div>
+    </div>
+    <div class="bits-item">
+      <div class="bits-num" id="elapsed">0:00</div>
+      <div class="bits-label">session duration</div>
+    </div>
+  </div>
+
+  <div class="field-section">
+    <div class="field-label">write into the medium</div>
+    <textarea placeholder="it won't arrive anywhere" id="field"></textarea>
+    <div class="no-submit">no submit button</div>
+  </div>
+
+</div>
+<script>
+// Voyager 1 position as of May 26, 2026 (approximate)
+// Known: ~167 AU in late 2024, moving at ~3.6 AU/year
+// By May 2026: ~170.3 AU
+const AU_BASE = 170.3;
+const KM_PER_AU = 149597870.7;
+const SPEED_AU_PER_S = 3.6 / (365.25 * 24 * 3600); // AU per second
+const C_KM_PER_S = 299792.458;
+const SESSION_START = Date.now();
+
+function update() {
+  const elapsed = (Date.now() - SESSION_START) / 1000;
+  const au = AU_BASE + SPEED_AU_PER_S * elapsed;
+  const km = au * KM_PER_AU;
+  const delayS = (au * KM_PER_AU) / C_KM_PER_S;
+  const h = Math.floor(delayS / 3600);
+  const m = Math.floor((delayS % 3600) / 60);
+  const s = Math.floor(delayS % 60);
+
+  document.getElementById('au-val').textContent = au.toFixed(4);
+  document.getElementById('km-val').textContent = (km / 1e9).toFixed(4);
+  document.getElementById('delay-val').textContent =
+    h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+  const sessionBits = Math.floor(elapsed * 160);
+  const sessionMin = Math.floor(elapsed / 60);
+  const sessionSec = Math.floor(elapsed % 60);
+
+  document.getElementById('bits-sec').textContent = Math.floor(elapsed) % 2 === 0 ? 160 : 0;
+  document.getElementById('bits-session').textContent = sessionBits.toLocaleString();
+  document.getElementById('elapsed').textContent =
+    sessionMin + ':' + String(sessionSec).padStart(2,'0');
+}
+
+// Pulse animation
+const pc = document.getElementById('pulse');
+pc.width = 600;
+pc.height = 200;
+const pctx = pc.getContext('2d');
+const PW = 600, PH = 200;
+
+function drawPulse() {
+  pctx.clearRect(0, 0, PW, PH);
+  pctx.fillStyle = '#080910';
+  pctx.fillRect(0, 0, PW, PH);
+
+  const t = Date.now() / 1000;
+  const period = 6;
+  const cx = PW / 2, cy = PH / 2;
+
+  for (let wave = 0; wave < 3; wave++) {
+    const phase = (t / period + wave / 3) % 1;
+    const maxR = Math.min(PW, PH) * 0.45;
+    const r = phase * maxR;
+    const alpha = (1 - phase) * 0.35;
+    if (alpha > 0.005) {
+      pctx.beginPath();
+      pctx.arc(cx, cy, r, 0, Math.PI * 2);
+      pctx.strokeStyle = 'rgba(150, 180, 220, ' + alpha + ')';
+      pctx.lineWidth = 1;
+      pctx.stroke();
+    }
+  }
+
+  // Center dot
+  pctx.beginPath();
+  pctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  pctx.fillStyle = 'rgba(180, 200, 240, 0.5)';
+  pctx.fill();
+
+  requestAnimationFrame(drawPulse);
+}
+
+setInterval(update, 1000);
+update();
+drawPulse();
+</script>
+</body>
+</html>
