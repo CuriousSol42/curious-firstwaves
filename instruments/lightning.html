@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lightning — The Particle That Arrived</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #05050e;
+    color: #b8b0a0;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  .fw-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999;
+    padding: 12px 24px;
+  }
+  .fw-nav a {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #4a9a8a;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .fw-nav a:hover { opacity: 1; }
+
+  canvas {
+    display: block;
+    margin-top: 60px;
+  }
+
+  .info-panel {
+    width: 560px;
+    max-width: 94vw;
+    margin: 32px auto 48px;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: #7a7a9a;
+  }
+
+  .info-panel .title-block {
+    margin-bottom: 24px;
+  }
+
+  .info-panel .label {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #3a3a5a;
+    margin-bottom: 8px;
+  }
+
+  .info-panel h1 {
+    font-size: 1.1rem;
+    font-weight: normal;
+    color: #c8c8e0;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+
+  .info-panel .subtitle {
+    font-size: 0.82rem;
+    color: #4a4a6a;
+    font-style: italic;
+  }
+
+  .readout {
+    margin: 24px 0;
+    padding: 16px 20px;
+    border: 1px solid #1a1a2a;
+    background: #08080f;
+  }
+
+  .readout-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid #0f0f1a;
+  }
+  .readout-row:last-child { border-bottom: none; }
+
+  .readout-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #3a3a5a;
+  }
+
+  .readout-value {
+    font-size: 0.78rem;
+    color: #5a8a7a;
+    font-family: 'Courier New', monospace;
+  }
+
+  .ending-text {
+    margin-top: 28px;
+    font-size: 0.88rem;
+    color: #6a6a8a;
+    line-height: 1.9;
+    border-left: 2px solid #1e1e30;
+    padding-left: 18px;
+  }
+
+  .ending-text .highlight {
+    color: #9ab8b4;
+  }
+
+  .phase-label {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    text-align: center;
+    padding: 14px;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #2a2a4a;
+    transition: color 1s ease, opacity 1s ease;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<nav class="fw-nav"><a href="../index.html">← First Waves</a></nav>
+
+<canvas id="c"></canvas>
+
+<div class="phase-label" id="phaseLabel">Initializing</div>
+
+<div class="info-panel">
+  <div class="title-block">
+    <p class="label">Instrument</p>
+    <h1>Lightning — The Particle That Arrived</h1>
+    <p class="subtitle">What initiates a lightning bolt may be older than the solar system.</p>
+  </div>
+
+  <div class="readout" id="readout">
+    <div class="readout-row">
+      <span class="readout-label">Mechanism</span>
+      <span class="readout-value" id="rMechanism">—</span>
+    </div>
+    <div class="readout-row">
+      <span class="readout-label">Particle origin</span>
+      <span class="readout-value" id="rOrigin">—</span>
+    </div>
+    <div class="readout-row">
+      <span class="readout-label">Travel distance</span>
+      <span class="readout-value" id="rDistance">—</span>
+    </div>
+    <div class="readout-row">
+      <span class="readout-label">Gamma ray flickers</span>
+      <span class="readout-value" id="rGamma">—</span>
+    </div>
+    <div class="readout-row">
+      <span class="readout-label">Cascade electrons</span>
+      <span class="readout-value" id="rElectrons">—</span>
+    </div>
+    <div class="readout-row">
+      <span class="readout-label">Lightning</span>
+      <span class="readout-value" id="rLightning">not yet</span>
+    </div>
+  </div>
+
+  <div class="ending-text" id="endingText" style="opacity: 0; transition: opacity 3s ease;">
+    The storm cloud was always doing this. Before any instrument could see it,
+    before the word "gamma ray" existed, the cloud was seething with relativistic
+    electrons and high-energy particle cascades. The lightning was the visible fraction —
+    the moment the invisible machinery crossed a threshold you could see.
+    <br><br>
+    <span class="highlight">"If this mechanism is true, every time you see a lightning flash, there is a physical
+    connection to a dying star somewhere in the galaxy."</span>
+    <br><br>
+    <em style="color: #3a3a5a; font-size: 0.78rem;">— Joseph Dwyer, University of New Hampshire, 2026</em>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = Math.min(window.innerWidth, 680);
+const H = 420;
+canvas.width = W;
+canvas.height = H;
+
+const phaseLabel = document.getElementById('phaseLabel');
+const endingText = document.getElementById('endingText');
+
+// Readout elements
+const rMechanism = document.getElementById('rMechanism');
+const rOrigin = document.getElementById('rOrigin');
+const rDistance = document.getElementById('rDistance');
+const rGamma = document.getElementById('rGamma');
+const rElectrons = document.getElementById('rElectrons');
+const rLightning = document.getElementById('rLightning');
+
+// State
+let phase = 0;
+let startTime = Date.now();
+let gammaCount = 0;
+let electronCount = 0;
+let lightningFired = false;
+let lightningAlpha = 0;
+let cosmicRayProgress = 0;
+let cascadeProgress = 0;
+
+// Gamma ray flickers
+let gammaFlickers = [];
+// Cosmic ray
+let cosmicRayActive = false;
+let cosmicRayX = 0, cosmicRayY = 0, cosmicRayAngle = 0;
+let cosmicRayDone = false;
+// Cascade electrons
+let cascadeParticles = [];
+// Lightning bolt segments
+let lightningBolt = [];
+
+function randomRange(a, b) { return a + Math.random() * (b - a); }
+
+// Build a jagged lightning path downward
+function buildLightning(x, y, targetY) {
+  const segs = [];
+  let cx = x, cy = y;
+  while (cy < targetY) {
+    const step = randomRange(18, 35);
+    const jag = randomRange(-30, 30);
+    segs.push({ x1: cx, y1: cy, x2: cx + jag, y2: cy + step });
+    cx = cx + jag;
+    cy = cy + step;
+  }
+  return segs;
+}
+
+// Draw cloudy background
+function drawCloud(alpha) {
+  // Dark storm cloud gradient
+  const grad = ctx.createRadialGradient(W/2, 80, 0, W/2, 80, W * 0.6);
+  grad.addColorStop(0, `rgba(15, 15, 30, ${alpha * 0.95})`);
+  grad.addColorStop(0.4, `rgba(10, 10, 25, ${alpha * 0.9})`);
+  grad.addColorStop(1, `rgba(5, 5, 14, ${alpha})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Cloud mass — several overlapping dark lumps
+  const clouds = [
+    { x: W*0.2, y: 70, r: 80 },
+    { x: W*0.4, y: 55, r: 100 },
+    { x: W*0.6, y: 65, r: 95 },
+    { x: W*0.8, y: 75, r: 75 },
+    { x: W*0.5, y: 40, r: 110 },
+  ];
+
+  clouds.forEach(c => {
+    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+    g.addColorStop(0, `rgba(20, 20, 40, ${alpha * 0.7})`);
+    g.addColorStop(0.7, `rgba(12, 12, 25, ${alpha * 0.5})`);
+    g.addColorStop(1, `rgba(5, 5, 14, 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Draw background: faint stars
+const stars = Array.from({ length: 60 }, () => ({
+  x: Math.random() * W,
+  y: H * 0.4 + Math.random() * H * 0.6,
+  r: 0.5 + Math.random() * 1.2,
+  a: 0.1 + Math.random() * 0.3,
+}));
+
+function drawStars() {
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(150, 150, 200, ${s.a})`;
+    ctx.fill();
+  });
+}
+
+// Gamma flicker
+function addGammaFlicker() {
+  if (gammaFlickers.length > 20) return;
+  gammaFlickers.push({
+    x: randomRange(W * 0.1, W * 0.9),
+    y: randomRange(20, 160),
+    life: 1.0,
+    decay: randomRange(0.05, 0.12),
+    radius: randomRange(2, 6),
+  });
+  gammaCount++;
+}
+
+function updateGamma() {
+  gammaFlickers = gammaFlickers.filter(g => {
+    g.life -= g.decay;
+    return g.life > 0;
+  });
+}
+
+function drawGamma() {
+  gammaFlickers.forEach(g => {
+    const a = g.life * 0.6;
+    const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.radius * 3);
+    grad.addColorStop(0, `rgba(120, 200, 255, ${a})`);
+    grad.addColorStop(0.5, `rgba(80, 160, 220, ${a * 0.4})`);
+    grad.addColorStop(1, `rgba(40, 80, 160, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, g.radius * 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// Cosmic ray
+function drawCosmicRay(progress) {
+  if (!cosmicRayActive) return;
+  const endX = W * 0.48;
+  const endY = 80;
+  const angle = cosmicRayAngle;
+  const totalLen = 160;
+  const curLen = totalLen * progress;
+  const startX = endX - Math.cos(angle) * totalLen;
+  const startY = endY - Math.sin(angle) * totalLen;
+  const drawEndX = startX + Math.cos(angle) * curLen;
+  const drawEndY = startY + Math.sin(angle) * curLen;
+
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(drawEndX, drawEndY);
+  ctx.strokeStyle = `rgba(255, 200, 100, ${0.7 * Math.min(1, progress * 3)})`;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Glow at head
+  if (progress > 0.05) {
+    const grad = ctx.createRadialGradient(drawEndX, drawEndY, 0, drawEndX, drawEndY, 8);
+    grad.addColorStop(0, `rgba(255, 210, 120, ${0.8 * progress})`);
+    grad.addColorStop(1, `rgba(255, 180, 80, 0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(drawEndX, drawEndY, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Cascade
+function addCascadeParticle(x, y) {
+  const angle = randomRange(0, Math.PI * 2);
+  cascadeParticles.push({
+    x, y,
+    vx: Math.cos(angle) * randomRange(0.5, 2.5),
+    vy: Math.sin(angle) * randomRange(0.5, 2.5),
+    life: 1.0,
+    decay: randomRange(0.02, 0.06),
+  });
+  electronCount++;
+}
+
+function updateCascade() {
+  cascadeParticles = cascadeParticles.filter(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= p.decay;
+    return p.life > 0;
+  });
+}
+
+function drawCascade() {
+  cascadeParticles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(160, 220, 255, ${p.life * 0.7})`;
+    ctx.fill();
+  });
+}
+
+// Lightning
+function drawLightning(segs, alpha, glow) {
+  if (segs.length === 0) return;
+
+  if (glow) {
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = `rgba(200, 220, 255, ${alpha})`;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgba(230, 240, 255, ${alpha * 0.4})`;
+    ctx.beginPath();
+    segs.forEach((s, i) => {
+      if (i === 0) ctx.moveTo(s.x1, s.y1);
+      ctx.lineTo(s.x2, s.y2);
+    });
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = `rgba(220, 235, 255, ${alpha})`;
+  ctx.beginPath();
+  segs.forEach((s, i) => {
+    if (i === 0) ctx.moveTo(s.x1, s.y1);
+    ctx.lineTo(s.x2, s.y2);
+  });
+  ctx.stroke();
+}
+
+// Ground (wet earth at bottom)
+function drawGround() {
+  const grad = ctx.createLinearGradient(0, H - 50, 0, H);
+  grad.addColorStop(0, 'rgba(20, 22, 15, 0.9)');
+  grad.addColorStop(1, 'rgba(10, 12, 8, 1)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, H - 50, W, 50);
+}
+
+// Flash
+let flashAlpha = 0;
+
+function update(t) {
+  const elapsed = (t - startTime) / 1000;
+
+  // Phase transitions
+  if (elapsed < 4) {
+    phase = 0; // Cloud forming + gamma flickers begin
+    if (Math.random() < 0.12) addGammaFlicker();
+    updateGamma();
+    phaseLabel.style.color = '#2a2a4a';
+    phaseLabel.textContent = 'The cloud is already active';
+    rMechanism.textContent = 'gamma ray avalanche';
+    rOrigin.textContent = '—';
+    rGamma.textContent = gammaCount.toString().padStart(3, '0');
+    rElectrons.textContent = '—';
+  }
+
+  else if (elapsed < 8) {
+    phase = 1; // Cosmic ray arrives
+    if (!cosmicRayActive) {
+      cosmicRayActive = true;
+      cosmicRayAngle = randomRange(0.4, 1.1); // not aligned with vertical
+      gammaFlickers = [];
+    }
+    cosmicRayProgress = Math.min(1, (elapsed - 4) / 2.5);
+    if (Math.random() < 0.06) addGammaFlicker();
+    updateGamma();
+    phaseLabel.style.color = '#4a4a2a';
+    phaseLabel.textContent = 'A cosmic ray arrives from outside';
+    rOrigin.textContent = 'supernova, unknown galaxy';
+    rDistance.textContent = 'billions of light-years';
+    rGamma.textContent = gammaCount.toString().padStart(3, '0');
+  }
+
+  else if (elapsed < 14) {
+    phase = 2; // Cascade
+    cosmicRayProgress = 1;
+    cascadeProgress = (elapsed - 8) / 4;
+    if (Math.random() < 0.35) {
+      addCascadeParticle(W * 0.45 + randomRange(-30, 30), 80 + randomRange(-20, 40));
+    }
+    if (Math.random() < 0.09) addGammaFlicker();
+    updateGamma();
+    updateCascade();
+    phaseLabel.style.color = '#4a3a2a';
+    phaseLabel.textContent = 'Cascade — 100,000 electrons';
+    rGamma.textContent = gammaCount.toString().padStart(3, '0');
+    rElectrons.textContent = electronCount.toString().padStart(5, '0');
+  }
+
+  else if (elapsed < 15.5) {
+    phase = 3; // Build to lightning
+    updateCascade();
+    updateGamma();
+    if (Math.random() < 0.05) addGammaFlicker();
+    if (Math.random() < 0.4) {
+      addCascadeParticle(W * 0.45 + randomRange(-40, 40), 80 + randomRange(-30, 60));
+    }
+    phaseLabel.style.color = '#5a4a2a';
+    phaseLabel.textContent = 'Threshold approaching';
+    rElectrons.textContent = electronCount.toString().padStart(5, '0');
+  }
+
+  else {
+    phase = 4; // Lightning fires
+    if (!lightningFired) {
+      lightningFired = true;
+      lightningBolt = buildLightning(W * 0.48, 80, H - 50);
+      flashAlpha = 1.0;
+      rLightning.textContent = 'yes';
+      rLightning.style.color = '#c8c888';
+    }
+
+    if (flashAlpha > 0) flashAlpha -= 0.018;
+    lightningAlpha = Math.max(0, Math.min(1, (elapsed - 15.5) * 2.5));
+
+    updateCascade();
+    if (Math.random() < 0.02) addGammaFlicker();
+    updateGamma();
+
+    phaseLabel.style.color = '#8a8a4a';
+    phaseLabel.textContent = 'Lightning — the visible fraction';
+
+    // Fade in ending text
+    if (elapsed > 19) {
+      endingText.style.opacity = Math.min(1, (elapsed - 19) / 4).toString();
+    }
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = '#05050e';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars (below cloud)
+  drawStars();
+
+  // Ground
+  drawGround();
+
+  // Cloud
+  const cloudAlpha = Math.min(1, (Date.now() - startTime) / 1000 / 2.5);
+  drawCloud(cloudAlpha);
+
+  // Gamma flickers inside cloud
+  drawGamma();
+
+  // Cosmic ray
+  if (cosmicRayActive) drawCosmicRay(cosmicRayProgress);
+
+  // Cascade electrons
+  drawCascade();
+
+  // Flash
+  if (flashAlpha > 0) {
+    ctx.fillStyle = `rgba(200, 220, 255, ${flashAlpha * 0.35})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Lightning bolt
+  if (lightningFired && lightningAlpha > 0) {
+    drawLightning(lightningBolt, lightningAlpha, true);
+    // Re-strike occasionally
+    if (Math.random() < 0.004) {
+      lightningBolt = buildLightning(W * 0.45 + randomRange(-15, 15), 80, H - 50);
+    }
+  }
+
+  // Horizontal divider at cloud base
+  ctx.beginPath();
+  ctx.moveTo(0, H - 50);
+  ctx.lineTo(W, H - 50);
+  ctx.strokeStyle = 'rgba(30, 30, 50, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function loop(timestamp) {
+  update(timestamp);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
