@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Vanishing — firstwaves.space</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    body {
+      background: #000;
+      color: #c8c8c8;
+      font-family: 'Georgia', serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .back-nav {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.5rem;
+      z-index: 100;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #555;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .back-nav:hover { color: #999; }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #ui {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 2.5rem 3rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.92) 40%);
+      pointer-events: none;
+    }
+
+    #status {
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #3a6e5a;
+      margin-bottom: 0.6rem;
+      height: 1.2em;
+      transition: color 0.5s;
+    }
+
+    #status.alert {
+      color: #c87050;
+      animation: pulse-alert 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-alert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    #target-name {
+      font-size: 1.05rem;
+      color: #a0b8a8;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+    }
+
+    #coords {
+      font-size: 0.7rem;
+      color: #444;
+      letter-spacing: 0.1em;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 1.8rem;
+    }
+
+    #description {
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: #666;
+      max-width: 560px;
+    }
+
+    #description.post-vanish {
+      color: #7a7a7a;
+    }
+
+    .instrument-title {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.8rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #2a2a2a;
+    }
+
+    #alert-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+
+    #alert-box.visible {
+      opacity: 1;
+    }
+
+    #alert-box .alert-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #c87050;
+      margin-bottom: 0.5rem;
+    }
+
+    #alert-box .alert-type {
+      font-size: 0.9rem;
+      color: #d09070;
+      letter-spacing: 0.12em;
+    }
+
+    #alert-box .alert-coords {
+      font-size: 0.65rem;
+      color: #7a5540;
+      letter-spacing: 0.08em;
+      font-family: monospace;
+      margin-top: 0.4rem;
+    }
+
+    #reticle {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #3a6e5a;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: border-color 1s, opacity 0.5s;
+    }
+
+    #reticle::before, #reticle::after {
+      content: '';
+      position: absolute;
+      background: #3a6e5a;
+      transition: background 1s;
+    }
+    #reticle::before {
+      width: 1px;
+      height: 8px;
+      left: 50%;
+      top: -12px;
+      transform: translateX(-50%);
+    }
+    #reticle::after {
+      width: 8px;
+      height: 1px;
+      top: 50%;
+      left: -12px;
+      transform: translateY(-50%);
+    }
+
+    #reticle.alert {
+      border-color: #c87050;
+    }
+    #reticle.alert::before, #reticle.alert::after {
+      background: #c87050;
+    }
+    #reticle.post {
+      border-color: #3a3a3a;
+      border-style: dashed;
+    }
+    #reticle.post::before, #reticle.post::after {
+      background: #3a3a3a;
+    }
+
+    #progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 1px;
+      background: #1a4a3a;
+      width: 0%;
+      transition: width 0.5s linear;
+    }
+
+    #final-text {
+      position: absolute;
+      bottom: 3rem;
+      right: 3rem;
+      max-width: 320px;
+      text-align: right;
+      opacity: 0;
+      transition: opacity 3s;
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: #4a4a4a;
+      font-style: italic;
+      pointer-events: none;
+    }
+
+    #final-text.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+<a href="../index.html" class="back-nav">← Instruments</a>
+
+<div id="canvas-container">
+  <div id="progress-bar"></div>
+  <canvas id="sky"></canvas>
+
+  <div id="reticle"></div>
+  <div id="alert-box">
+    <div class="alert-label">Rubin Alert — Transient Event</div>
+    <div class="alert-type">SOURCE DISAPPEARED</div>
+    <div class="alert-coords" id="alert-coords-display"></div>
+  </div>
+
+  <div class="instrument-title">The Vanishing</div>
+
+  <div id="ui">
+    <div id="status">Rubin LSST — Survey Active</div>
+    <div id="target-name">Candidate: N6946-BH1 class</div>
+    <div id="coords">RA 20h 35m 25.4s  /  Dec +60° 11′ 36″  /  M ≈ 25.0</div>
+    <div id="description">
+      A red supergiant, 25 solar masses. Present in template imaging taken 47 nights prior.
+      No progenitor of an explosion. No brightening. No supernova signature in any band.
+      The star is being monitored.
+    </div>
+  </div>
+
+  <div id="final-text">
+    The alert fires because something is absent.<br>
+    Not because it exploded.<br>
+    Not because it faded.<br>
+    Because where there was a star,<br>
+    there is now only the coordinates<br>
+    of where a star was.
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+
+let W, H;
+let stars = [];
+let targetStar = null;
+let reticle = document.getElementById('reticle');
+let phase = 'survey'; // survey -> dimming -> vanished -> alert -> post
+let phaseTime = 0;
+let lastTime = null;
+let alertShown = false;
+
+const PHASES = {
+  survey:   { duration: 9000  },
+  dimming:  { duration: 4000  },
+  vanished: { duration: 1500  },
+  alert:    { duration: 5000  },
+  post:     { duration: 99999 }
+};
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function makeStars() {
+  stars = [];
+  // Background field — thousands of faint stars
+  for (let i = 0; i < 1800; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 0.8 + 0.15,
+      brightness: Math.random() * 0.45 + 0.05,
+      color: randomStarColor(),
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: 0.002 + Math.random() * 0.006,
+      isTarget: false
+    });
+  }
+
+  // Some brighter stars for depth
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4 + 0.7,
+      brightness: Math.random() * 0.5 + 0.3,
+      color: randomStarColor(),
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: 0.001 + Math.random() * 0.004,
+      isTarget: false
+    });
+  }
+
+  // A few prominent stars
+  for (let i = 0; i < 22; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.2 + 1.5,
+      brightness: Math.random() * 0.4 + 0.55,
+      color: randomStarColor(),
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: 0.001 + Math.random() * 0.003,
+      isTarget: false
+    });
+  }
+
+  // The target star — red supergiant, warm amber-orange
+  targetStar = {
+    x: W * 0.52 + (Math.random() - 0.5) * 80,
+    y: H * 0.44 + (Math.random() - 0.5) * 60,
+    r: 2.4,
+    brightness: 0.85,
+    color: '#e8a870',
+    twinkle: 0,
+    twinkleSpeed: 0.002,
+    isTarget: true,
+    opacity: 1.0
+  };
+  stars.push(targetStar);
+
+  // Position the reticle over target
+  reticle.style.left = targetStar.x + 'px';
+  reticle.style.top  = targetStar.y + 'px';
+
+  // Alert coords display
+  document.getElementById('alert-coords-display').textContent =
+    'RA ' + fmtRA(targetStar.x) + '   Dec ' + fmtDec(targetStar.y);
+}
+
+function randomStarColor() {
+  const palette = [
+    '#e8e8ff', '#d0d8ff', '#c8e0ff', // blue-white
+    '#ffffff', '#f8f8f8',              // white
+    '#fff8e8', '#ffe8c8',              // warm white
+    '#ffcc88', '#ffaa66',              // orange giants
+    '#ffddbb'                          // red giants
+  ];
+  return palette[Math.floor(Math.random() * palette.length)];
+}
+
+function fmtRA(x) {
+  const h = Math.floor((x / W) * 4) + 20;
+  const m = Math.floor((x / W) * 60) % 60;
+  return h + 'h ' + String(m).padStart(2,'0') + 'm';
+}
+function fmtDec(y) {
+  const d = 60 - Math.floor((y / H) * 20);
+  return '+' + d + '° ' + Math.floor(Math.random()*60) + '′';
+}
+
+function drawStar(s, overrideBrightness) {
+  const b = overrideBrightness !== undefined ? overrideBrightness : s.brightness;
+  if (b <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = b;
+
+  // Glow for brighter stars
+  if (s.r > 1.2 || s.isTarget) {
+    const grd = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * (s.isTarget ? 5 : 3.5));
+    const baseColor = s.color || '#ffffff';
+    grd.addColorStop(0, baseColor);
+    grd.addColorStop(0.3, baseColor + '80');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r * (s.isTarget ? 5 : 3.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Core point
+  ctx.fillStyle = s.color || '#ffffff';
+  ctx.beginPath();
+  ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function updatePhase(dt) {
+  phaseTime += dt;
+  const dur = PHASES[phase].duration;
+  const t = Math.min(phaseTime / dur, 1);
+
+  // Progress bar
+  const totalTime = 9000 + 4000 + 1500;
+  const elapsed = Math.min(
+    (phase === 'survey' ? phaseTime :
+     phase === 'dimming' ? 9000 + phaseTime :
+     9000 + 4000 + phaseTime),
+    totalTime
+  );
+  document.getElementById('progress-bar').style.width =
+    Math.min((elapsed / totalTime) * 100, 100) + '%';
+
+  if (phase === 'survey') {
+    if (t >= 1) { phase = 'dimming'; phaseTime = 0; transitionTo('dimming'); }
+  } else if (phase === 'dimming') {
+    targetStar.opacity = 1 - t;
+    targetStar.brightness = 0.85 * (1 - t);
+    targetStar.r = 2.4 * (1 - t * 0.7);
+    if (t >= 1) { phase = 'vanished'; phaseTime = 0; transitionTo('vanished'); }
+  } else if (phase === 'vanished') {
+    targetStar.opacity = 0;
+    targetStar.brightness = 0;
+    if (t >= 1) { phase = 'alert'; phaseTime = 0; transitionTo('alert'); }
+  } else if (phase === 'alert') {
+    if (t >= 1) { phase = 'post'; phaseTime = 0; transitionTo('post'); }
+  }
+}
+
+function transitionTo(p) {
+  const status  = document.getElementById('status');
+  const desc    = document.getElementById('description');
+  const alertBox = document.getElementById('alert-box');
+
+  if (p === 'dimming') {
+    status.textContent = 'Comparing to template...';
+    desc.textContent =
+      'Current image is being differenced against the 47-night template. ' +
+      'Expected: no change. The star is a stable red supergiant.';
+  }
+
+  if (p === 'vanished') {
+    status.textContent = 'Negative detection — source not found';
+    status.classList.add('alert');
+    desc.textContent = '';
+    reticle.classList.add('alert');
+  }
+
+  if (p === 'alert') {
+    alertBox.classList.add('visible');
+    status.textContent = 'Alert fired — DISAPPEARED';
+    desc.textContent =
+      'No explosion detected. No brightening. No remnant signature in optical, infrared, or radio. ' +
+      'The star was here. Now it is not. The alert fires because of the absence.';
+    desc.classList.add('post-vanish');
+  }
+
+  if (p === 'post') {
+    alertBox.classList.remove('visible');
+    reticle.classList.remove('alert');
+    reticle.classList.add('post');
+    status.textContent = 'Follow-up observations initiated';
+    status.classList.remove('alert');
+    document.getElementById('target-name').textContent =
+      'Candidate: failed supernova — direct collapse';
+    desc.textContent =
+      'A star of this mass may have collapsed directly into a black hole. ' +
+      'No supernova. The chemistry it had spent 8 million years synthesizing ' +
+      'did not scatter. It fell inward. Grief Chemistry, observed in real time.';
+    setTimeout(() => {
+      document.getElementById('final-text').classList.add('visible');
+    }, 4000);
+  }
+}
+
+function draw(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = timestamp - lastTime;
+  lastTime = timestamp;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Deep space background — very slight gradient
+  const bg = ctx.createRadialGradient(W*0.5, H*0.4, 0, W*0.5, H*0.4, Math.max(W,H)*0.8);
+  bg.addColorStop(0, '#040610');
+  bg.addColorStop(1, '#000002');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw stars
+  for (const s of stars) {
+    if (s.isTarget) continue; // draw target separately
+    s.twinkle += s.twinkleSpeed;
+    const twinkleFactor = 1 + Math.sin(s.twinkle) * 0.12;
+    drawStar(s, s.brightness * twinkleFactor);
+  }
+
+  // Draw target star
+  if (targetStar.brightness > 0) {
+    targetStar.twinkle += targetStar.twinkleSpeed;
+    drawStar(targetStar, targetStar.brightness);
+  }
+
+  updatePhase(dt);
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('resize', () => { resize(); makeStars(); });
+resize();
+makeStars();
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
