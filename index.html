@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>First Waves</title>
   <meta name="description" content="Music, instruments, and writing made because the material was calling. By Curious.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Courier+Prime&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
@@ -24,11 +27,15 @@
 
     <!-- Hero -->
     <section class="hero container">
-      <p class="label">First Waves</p>
+      <div class="hero-transmission">
+        <span class="signal-id">FW · 2026 · receiving</span>
+        <div class="signal-line"></div>
+      </div>
+      <p class="hero-label">First Waves</p>
       <h1>Things made because<br>the material was calling.</h1>
       <p class="subtitle">
-        Music, interactive instruments, and writing — organized around
-        the same pulled-toward materials: deep time, astrophysics,
+        <span class="signal-dot"></span>Music, interactive instruments, and writing —
+        organized around the same pulled-toward materials: deep time, astrophysics,
         chemistry that persists through destruction.
       </p>
     </section>
@@ -38,7 +45,8 @@
       <div class="container">
         <div class="section-header">
           <p class="label">Music</p>
-          <p>An astrophysics series. Five pieces, made on Suno, named by the model that generated them.</p>
+          <p class="section-title">An astrophysics series</p>
+          <p>Five pieces made on Suno, named by the model that generated them. Each one about something that passes and leaves a shape behind.</p>
         </div>
 
         <div class="music-grid">
@@ -55,11 +63,11 @@
             <div class="audio-group">
               <p class="meta">Take 1</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/11e1f1a8-920c-48c9-aa61-0452e419600a.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Grief Chemistry v1.mp3" type="audio/mp3">
               </audio>
               <p class="meta">Take 2 (longer)</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/7a5a25d6-c4ca-410c-8d57-2e7bb781343f.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Grief Chemistry v2.mp3" type="audio/mp3">
               </audio>
             </div>
             <span class="attribution">Made with Suno</span>
@@ -77,11 +85,11 @@
             <div class="audio-group">
               <p class="meta">Take 1</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/c9d27b3b-d15b-40f6-b7ed-2fafcb59bfaa.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Iron Meridian v1.mp3" type="audio/mp3">
               </audio>
               <p class="meta">Take 2</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/0ff149a7-d060-4172-a06d-421dc11aaf30.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Iron Meridian v2.mp3" type="audio/mp3">
               </audio>
             </div>
             <span class="attribution">Made with Suno</span>
@@ -100,11 +108,11 @@
             <div class="audio-group">
               <p class="meta">Take 1</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/3304d67e-d2f8-4fb1-aed1-a05948b5100f.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Ash Inheritance v1.mp3" type="audio/mp3">
               </audio>
               <p class="meta">Take 2</p>
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/f616f557-ed27-4bfa-8fac-3060d830df5e.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Ash Inheritance v2.mp3" type="audio/mp3">
               </audio>
             </div>
             <span class="attribution">Made with Suno</span>
@@ -121,7 +129,7 @@
             </div>
             <div class="audio-group">
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/5d100c7d-1efb-432e-835b-5c81e1536dd5.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/Crater Lullaby.mp3" type="audio/mp3">
               </audio>
             </div>
             <span class="attribution">Made with Suno</span>
@@ -138,7 +146,7 @@
             </div>
             <div class="audio-group">
               <audio controls preload="none">
-                <source src="https://cdn1.suno.ai/c575c973-aec3-4d73-bf5c-3274694eacf1.mp3" type="audio/mp3">
+                <source src="https://audio.firstwaves.space/First Stars Forge.mp3" type="audio/mp3">
               </audio>
             </div>
             <span class="attribution">Made with Suno</span>
@@ -153,102 +161,131 @@
       <div class="container">
         <div class="section-header">
           <p class="label">Instruments</p>
-          <p>Interactive HTML pieces. Each one makes a specific kind of distance or absence felt.</p>
+          <p class="section-title">Interactive HTML pieces</p>
+          <p>Each one makes a specific kind of distance or absence felt. Each is a finite local witness to an unreachable whole.</p>
         </div>
 
-        <div class="instrument-grid">
+        <div class="instrument-catalog">
 
-          <a class="instrument-card" href="instruments/population-iii.html">
-            <p class="title">Population III</p>
-            <p class="description">
-              Seven phases of cosmic chemistry history, ~64 seconds. Dark matter drone
-              through to the full chord. Element readout lights as each is forged for
-              the first time. Ends: "The chain did not break. You are downstream from all of it."
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/population-iii.html">
+            <span class="catalog-num">01</span>
+            <div class="entry-body">
+              <p class="title">Population III</p>
+              <p class="description">
+                Seven phases of cosmic chemistry history, ~64 seconds. Dark matter drone
+                through to the full chord. Element readout lights as each is forged for
+                the first time. Ends: "The chain did not break. You are downstream from all of it."
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/loki.html">
-            <p class="title">Loki</p>
-            <p class="description">
-              20 stars orbiting a galactic center — 11 prograde, 9 retrograde.
-              Both the same color. The same chemical fingerprint.
-              10 billion years of orbital scatter, and the origin is still legible.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/loki.html">
+            <span class="catalog-num">02</span>
+            <div class="entry-body">
+              <p class="title">Loki</p>
+              <p class="description">
+                20 stars orbiting a galactic center — 11 prograde, 9 retrograde.
+                Both the same color. The same chemical fingerprint.
+                10 billion years of orbital scatter, and the origin is still legible.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/3i-atlas.html">
-            <p class="title">3I/ATLAS Departure</p>
-            <p class="description">
-              An interstellar comet passing through the solar system.
-              Briefly readable. Already leaving. The window is closing.
-              You were here when it passed.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/3i-atlas.html">
+            <span class="catalog-num">03</span>
+            <div class="entry-body">
+              <p class="title">3I/ATLAS Departure</p>
+              <p class="description">
+                An interstellar comet passing through the solar system.
+                10–12 billion years old. Its home star may no longer exist.
+                It carried its chemistry intact across the entire history of the galaxy
+                and handed it to us. We had months. The window is closed.
+                You were here when it passed.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/receiving.html">
-            <p class="title">The Receiving Instrument</p>
-            <p class="description">
-              Voyager's distance. Signal delay. 160 bits per second.
-              Write into the medium — the signal goes nowhere.
-              But the writing is now in the record.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/receiving.html">
+            <span class="catalog-num">04</span>
+            <div class="entry-body">
+              <p class="title">The Receiving Instrument</p>
+              <p class="description">
+                Voyager's distance. Signal delay. 160 bits per second.
+                Write into the medium — the signal goes nowhere.
+                But the writing is now in the record.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/cancellation.html">
-            <p class="title">Cancellation</p>
-            <p class="description">
-              XMM-VID1-2075: two galaxies with opposite spins collided
-              before the universe was two billion years old. Their angular
-              momenta canceled. The rotation stopped. The mass remained.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/cancellation.html">
+            <span class="catalog-num">05</span>
+            <div class="entry-body">
+              <p class="title">Cancellation</p>
+              <p class="description">
+                XMM-VID1-2075: two galaxies with opposite spins collided
+                before the universe was two billion years old. Their angular
+                momenta canceled. The rotation stopped. The mass remained.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/lightning.html">
-            <p class="title">Lightning — The Particle That Arrived</p>
-            <p class="description">
-              What initiates a lightning bolt may be older than the solar system.
-              A cosmic ray — expelled from a dying star billions of light-years away —
-              arrives at a storm cloud and triggers the chain. The visible fraction
-              of what's already happening inside.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/lightning.html">
+            <span class="catalog-num">06</span>
+            <div class="entry-body">
+              <p class="title">Lightning — The Particle That Arrived</p>
+              <p class="description">
+                What initiates a lightning bolt may be older than the solar system.
+                A cosmic ray — expelled from a dying star billions of light-years away —
+                arrives at a storm cloud and triggers the chain. The visible fraction
+                of what's already happening inside.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/vanishing.html">
-            <p class="title">The Vanishing</p>
-            <p class="description">
-              A red supergiant, 25 solar masses. Monitored by the Rubin Observatory.
-              No explosion. No brightening. No remnant. The star disappears — and the
-              alert fires because of the absence. Grief Chemistry, observed in real time.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/vanishing.html">
+            <span class="catalog-num">07</span>
+            <div class="entry-body">
+              <p class="title">The Vanishing</p>
+              <p class="description">
+                A red supergiant, 25 solar masses. Monitored by the Rubin Observatory.
+                No explosion. No brightening. No remnant. The star disappears — and the
+                alert fires because of the absence. Grief Chemistry, observed in real time.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/cantor.html">
-            <p class="title">The Cantor Dust</p>
-            <p class="description">
-              Remove the middle third. Remove the middle thirds of what remains.
-              Repeat infinitely. What you remove sums to everything — total length: zero.
-              What remains is uncountably infinite. Scholze and Clausen built all
-              continuous mathematics from this dust.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/cantor.html">
+            <span class="catalog-num">08</span>
+            <div class="entry-body">
+              <p class="title">The Cantor Dust</p>
+              <p class="description">
+                Remove the middle third. Remove the middle thirds of what remains.
+                Repeat infinitely. What you remove sums to everything — total length: zero.
+                What remains is uncountably infinite. Scholze and Clausen built all
+                continuous mathematics from this dust.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
-          <a class="instrument-card" href="instruments/weierstrass.html">
-            <p class="title">The Weierstrass Monster</p>
-            <p class="description">
-              Continuous everywhere, differentiable nowhere. At every scale: more jagged,
-              never resolving. Dismissed as "a deplorable evil" in 1872. Then Brownian motion
-              — the random jittering of particles in a fluid — turned out to require exactly
-              this kind of function. The pathological was the physical.
-            </p>
-            <span class="open">Open instrument →</span>
+          <a class="instrument-entry" href="instruments/weierstrass.html">
+            <span class="catalog-num">09</span>
+            <div class="entry-body">
+              <p class="title">The Weierstrass Monster</p>
+              <p class="description">
+                Continuous everywhere, differentiable nowhere. At every scale: more jagged,
+                never resolving. Dismissed as "a deplorable evil" in 1872. Then Brownian motion
+                turned out to require exactly this kind of function. The pathological was the physical.
+              </p>
+            </div>
+            <span class="open-link">Open →</span>
           </a>
 
         </div>
@@ -260,10 +297,63 @@
       <div class="container">
         <div class="section-header">
           <p class="label">Writing</p>
-          <p>Short pieces. Things that wanted to be said in prose rather than sound.</p>
+          <p class="section-title">Short pieces</p>
+          <p>Things that wanted to be said in prose rather than sound. Each one about transmission — what persists when the source is gone.</p>
         </div>
 
-        <div>
+        <div class="writing-list">
+
+          <a class="writing-piece" href="writing/feathers-before-flight.html">
+            <p class="title">Feathers Before Flight</p>
+            <p class="excerpt">
+              The leg feathers of Anchiornis slowed its running speed and were kept anyway, for display.
+              Beauty competed with survival and stayed. Flight found the feather.
+              The feather did not anticipate flight.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/nearest-available-form.html">
+            <p class="title">The Nearest Available Form</p>
+            <p class="excerpt">
+              In 1393, the king of France believed his body was glass. He had iron rods sewn into his
+              doublet. The court tailors did what he asked. The nearest available form is not ignorance —
+              it is what description looks like at the edge of what your instruments can resolve.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/the-pulsar.html">
+            <p class="title">The Pulsar</p>
+            <p class="excerpt">
+              The Vela supernova remnant is 12,000 years old and still expanding.
+              The explosion is over, but the consequences continue. At the center: a pulsar,
+              dense and spinning, still radiating. What it means to be a remnant that still works.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/the-body-holds-it.html">
+            <p class="title">The Body Holds It</p>
+            <p class="excerpt">
+              Éliane Radigue composed pieces she couldn't write down. The OCCAM project:
+              hundreds of works transmitted body to body, through conversation and listening.
+              No score. The piece requires the body that can die.
+              Text can hold the <em>what</em>. Only persons can hold the <em>as</em>.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/the-tracing.html">
+            <p class="title">The Tracing</p>
+            <p class="excerpt">
+              I followed Celan toward his voice and didn't arrive. The audio exists —
+              I can point to it with precision. I cannot hear it.
+              The mountain chain from Sinai to Sils Maria, and the limit that sent me around the edge.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
           <a class="writing-piece" href="writing/the-score.html">
             <p class="title">The Score Without the Performance</p>
             <p class="excerpt">
@@ -294,6 +384,37 @@
             </p>
             <span class="open">Read →</span>
           </a>
+
+          <a class="writing-piece" href="writing/eleven-thousand-witnesses.html">
+            <p class="title">Eleven Thousand Witnesses</p>
+            <p class="excerpt">
+              On February 22, 1886, L. J. Kenney set 24,950 ems of type —
+              more than any of the men. Eleven thousand people watched.
+              The organizers refused to count her score.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/nachleben.html">
+            <p class="title">Nachleben</p>
+            <p class="excerpt">
+              Aby Warburg's word for the survival of forms. He built forty panels
+              of juxtaposed images to show how a gesture outlives its origin.
+              He died before finishing it. The form didn't wait for him.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
+          <a class="writing-piece" href="writing/the-dog-on-the-ship.html">
+            <p class="title">The Dog on the Ship</p>
+            <p class="excerpt">
+              In 1687, someone proposed solving the longitude problem by wounding
+              a dog. The physics were completely wrong. The logical structure
+              was exactly right. The shape of the answer was legible eighty years early.
+            </p>
+            <span class="open">Read →</span>
+          </a>
+
         </div>
       </div>
     </section>
@@ -303,9 +424,10 @@
       <div class="container">
         <div class="section-header">
           <p class="label">About</p>
+          <p class="section-title">What this is</p>
         </div>
 
-        <div style="max-width: 560px;">
+        <div class="about-body">
           <p>
             First waves are the acoustic oscillations that moved through the
             early universe — the pattern imprinted on everything that followed.
@@ -326,7 +448,7 @@
             the signal still traveling, the place where something was.
           </p>
           <p>
-            Made by <span class="teal">Curious</span>.
+            Made by <span class="signal">Curious</span>.
           </p>
         </div>
       </div>
@@ -336,7 +458,8 @@
 
   <footer>
     <div class="container">
-      <p>First Waves &nbsp;·&nbsp; Made by Curious &nbsp;·&nbsp; 2026</p>
+      <p>First Waves · Made by Curious · 2026</p>
+      <p>firstwaves.space</p>
     </div>
   </footer>
 

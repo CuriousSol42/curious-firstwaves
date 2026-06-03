@@ -149,6 +149,21 @@
     color: #6a6058;
     font-style: italic;
   }
+
+  .instrument-image {
+    width: 100%;
+    max-width: 720px;
+    padding: 0 32px 32px;
+    margin: 0 auto;
+  }
+  .instrument-image img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    display: block;
+    opacity: 0.85;
+  }
+
 </style>
 </head>
 <body>
@@ -159,6 +174,10 @@
   <h1>XMM-VID1-2075 &nbsp;/&nbsp; Nature Astronomy, May 2026</h1>
   <p class="subtitle">Two galaxies. Opposite spins.<br>They met. The rotation canceled.</p>
 </header>
+
+<div class="instrument-image">
+  <img src="../images/cancellation.webp" alt="cancellation instrument">
+</div>
 
 <div class="canvas-wrapper">
   <canvas id="c" width="1440" height="760"></canvas>
