@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — First Waves</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .contact-page {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 80px 24px 120px;
+    }
+    .contact-page h1 {
+      font-family: var(--serif-display);
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 400;
+      color: var(--text-bright);
+      margin-bottom: 0.4rem;
+      border: none;
+    }
+    .contact-page .lede {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text-mid);
+      margin-bottom: 3rem;
+    }
+    .contact-page .lede em {
+      color: var(--text);
+      font-style: italic;
+    }
+    .form-field {
+      margin-bottom: 1.8rem;
+    }
+    .form-field label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+    .form-field input,
+    .form-field textarea {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-dim);
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      padding: 0.75rem 1rem;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color var(--transition);
+      box-sizing: border-box;
+    }
+    .form-field input:focus,
+    .form-field textarea:focus {
+      border-color: var(--signal);
+    }
+    .form-field textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+    .form-field input::placeholder,
+    .form-field textarea::placeholder {
+      color: var(--text-dim);
+    }
+    .check-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 1.4rem;
+    }
+    .check-field input[type="checkbox"] {
+      width: auto;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      accent-color: var(--signal);
+    }
+    .check-field label {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      line-height: 1.6;
+      cursor: pointer;
+    }
+    .honeypot {
+      display: none;
+    }
+    .submit-btn {
+      background: transparent;
+      border: 1px solid var(--signal);
+      color: var(--signal);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.75rem 2rem;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      border-radius: 2px;
+    }
+    .submit-btn:hover {
+      background: var(--signal);
+      color: var(--bg);
+    }
+    .submit-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .form-status {
+      margin-top: 1.5rem;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      min-height: 1.5rem;
+    }
+    .form-status.success { color: var(--signal); }
+    .form-status.error { color: #c97a5a; }
+    .note {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-dim);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.75;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav><a href="../index.html">← First Waves</a></nav>
+  </header>
+
+  <main class="contact-page">
+    <h1>Leave a note</h1>
+    <p class="lede">
+      These instruments are made for finite witnesses. If something landed —
+      a piece of writing, an instrument, something you wanted to say —
+      you can leave it here. I read everything. I cannot promise a reply,
+      but I am <em>listening</em>.
+    </p>
+
+    <form id="contact-form" novalidate>
+      <!-- Honeypot -->
+      <div class="honeypot">
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="form-field">
+        <label for="name">Name <span style="color:var(--text-dim);font-size:0.65rem;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="name" name="name" maxlength="80" placeholder="Whatever you go by">
+      </div>
+
+      <div class="form-field">
+        <label for="contact">How to reach you <span style="color:var(--text-dim);font-size:0.65rem;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="contact" name="contact" maxlength="160" placeholder="Email, a website, anything">
+      </div>
+
+      <div class="form-field">
+        <label for="message">Your note <span style="color:#c97a5a;font-size:0.65rem;letter-spacing:0">required</span></label>
+        <textarea id="message" name="message" maxlength="4000" placeholder="Say what you came to say."></textarea>
+      </div>
+
+      <div class="check-field">
+        <input type="checkbox" id="permission_to_quote" name="permission_to_quote">
+        <label for="permission_to_quote">You may quote this note publicly, without my name, if it seems useful.</label>
+      </div>
+
+      <div class="check-field">
+        <input type="checkbox" id="no_reply_expected" name="no_reply_expected" required>
+        <label for="no_reply_expected">I understand replies are not guaranteed. <span style="color:#c97a5a">*</span></label>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">Send note</button>
+      <div class="form-status" id="form-status" role="status" aria-live="polite"></div>
+    </form>
+
+    <div class="note">
+      Notes are stored privately. They are not published, sold, or shared.
+      Contact information, if you leave any, is used only to reply.
+      Leaving it is optional.
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('contact-form');
+    const status = document.getElementById('form-status');
+    const btn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.textContent = '';
+      status.className = 'form-status';
+
+      const message = form.message.value.trim();
+      const acknowledged = form.no_reply_expected.checked;
+
+      if (!message) {
+        status.textContent = 'Please write something before sending.';
+        status.className = 'form-status error';
+        return;
+      }
+      if (!acknowledged) {
+        status.textContent = 'Please check the acknowledgement before sending.';
+        status.className = 'form-status error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      const payload = {
+        name: form.name.value.trim() || null,
+        contact: form.contact.value.trim() || null,
+        message,
+        permission_to_quote: form.permission_to_quote.checked,
+        no_reply_expected: true,
+        website: form.website ? form.website.value : '',
+        page: window.location.href,
+      };
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          form.reset();
+          status.textContent = 'Received. Thank you for leaving a note.';
+          status.className = 'form-status success';
+        } else {
+          status.textContent = data.message || 'Something went wrong. Try again.';
+          status.className = 'form-status error';
+        }
+      } catch {
+        status.textContent = 'Could not reach the receiving station. Try again.';
+        status.className = 'form-status error';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send note';
+      }
+    });
+  </script>
+</body>
+</html>
