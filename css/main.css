@@ -433,10 +433,28 @@ nav ul li a:hover { color: var(--signal); }
 }
 .piece-footer {
   margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-dim);
   font-size: 0.8rem;
   color: var(--text-dim);
   letter-spacing: 0.06em;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
+.leave-note {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--signal);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+.leave-note:hover { opacity: 1; }
 
 /* ── Writing ── */
 .writing-list {
